@@ -51,12 +51,27 @@ subset_index <- function(time_s) {
 	(time_s*freq-plot_padding*freq):(time_s*freq+plot_padding*freq)
 }
 
-check_ectopic <- function(t_ectopic, main_title = "none") {
+check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point") {
 	#Plots ecg as vector and calculates fitting time axis, as window() is too slow
 	plot(y = raw_ekg[subset_index(t_ectopic)], x = seq(t_ectopic - plot_padding, t_ectopic + plot_padding, by =1/freq),
 	     main = main_title, type = "l")
-	abline(v=raw_R[raw_R > t_ectopic - plot_padding & raw_R < t_ectopic + plot_padding]+1/freq, #+1/freq to make marks fit
-	      col = "red") #Mark R detections
+	
+	#Marks R with vertical lines
+	if (R_mark == "line") {
+		abline(v = raw_R[raw_R > t_ectopic - plot_padding &
+				 	raw_R < t_ectopic + plot_padding] + 1 / freq, #+1/freq to make marks fit
+				 	col = "red") #Mark R detections
+	}
+	#Mark R with crosses
+	if (R_mark == "point") {
+		points(x = raw_R[raw_R > t_ectopic - plot_padding &
+				 	raw_R < t_ectopic + plot_padding] + 1 / freq,
+				 	y = raw_ekg[raw_R[raw_R > t_ectopic - plot_padding &
+				 			  	raw_R < t_ectopic + plot_padding] * freq + 1], # +1 to make marks fit
+				 	col = "red",
+				 	pch = 4, #Type X (3 = cross)
+				 	cex = 1.5) # size
+	}
 	
 	readkeygraph("[press key to classify beat]")
 }
@@ -80,11 +95,13 @@ sort_ectopics <- function(vec_ectopics){
 	
 	windows() #getGraphicsEvent only works in win.plot
 	while (TRUE) {
+		#Show beat and get key press
 		ectopic_class <- check_ectopic(df_ectopics$time[i], 
 					       main_title = sprintf("Class = %s  (%i / %i)", 
 					       		     df_ectopics$class[i],
 					       		     i,
-					       		     n_ectopics)) #Show beat and get key press
+					       		     n_ectopics),
+					       R_mark = "point") #or line
 		#Check key press
 		if (ectopic_class == "v") {
 			df_ectopics$class[i] <- "V"
