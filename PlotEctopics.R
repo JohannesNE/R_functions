@@ -1,14 +1,17 @@
 library(dplyr)
-library(ggplot2)
+library(xlsx)
 
 source("HRV_matlab.R")
 
-#Choose file to analyse
+#Folder Paths
 path_ecg_mat <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H rettet/"
-ecg_files <- grep(".mat", list.files(path_ecg_mat), value = TRUE)
+path_ectopics <- "C:/Users/jene/Documents/Research/Ekstrasystoler/DetectedEctopics/"
 
-ectopic_times <- c(18*60+19, 29*60-0.5, 17*60+53, 60*60+36*60+33.5) #eksample
-ectopics2 <- c(1,2,3,4)
+#find files
+ecg_files <- grep(".mat", list.files(path_ecg_mat), value = TRUE)
+ectopics_files <- list.files(path_ectopics)
+
+ectopic_times_ex <- c(18*60+19, 29*60-0.5, 17*60+53, 60*60+36*60+33.5) #eksample for ecg_files[2]
 
 freq <- 125
 
@@ -17,16 +20,37 @@ output_folder <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H types/"
 # === VISUAL SETTINGS ======
 plot_padding <- 3 #seconds on both sides of ectopic
 
+### Functions ------------------
 
 #Load ecg as time series
-if(FALSE) { 
-	raw_data <- getData(paste(path_ecg_mat, ecg_files[2], sep = ""))
-	raw_ekg <- ts(raw_data$CNT$EKG, frequency = 125, start = 0)
-	raw_R <- raw_data$HRV$Data$T.RR # R detections
-	rm(raw_data)
-}
+get_analysis_data <- function(index){
+	#Check that file has match in ectopics folder (tests that file name exists in ectopic folder)
+	if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 1) {
+		raw_data <- getData(paste(path_ecg_mat, ecg_files[index], sep = "")) #loads kubios .mat file
+		raw_ekg <- ts(raw_data$CNT$EKG, frequency = 125, start = 0)
+		raw_R <- raw_data$HRV$Data$T.RR # R detections
+		rm(raw_data)
+		
+		ectopic_file <- grep(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files,
+				     value = TRUE)
+		
+		message(sprintf("ECG: %s \nEctopic: %s", ecg_files[index], ectopic_file))
+		
+		#read xlsx and convert to vector
+		ectopic_times <- read.xlsx(paste(path_ectopics, ectopic_file, sep = ""), 
+						 1, header = FALSE)[,1]
+		
+		list(ECG = raw_ekg, R = raw_R, ectopics = ectopic_times)	
+	}
+	else if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 0) {
+		return(message("No match in ectopic folder"))
+	}
+	else if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) > 1) {
+		return(message("More than 1 match... probably due to file being open in excel"))
+	}
+	
 
-### Functions ------------------
+}
 
 readkeygraph <- function(prompt)
 {
@@ -44,7 +68,7 @@ onKeybd <- function(key)
 }
 	
 #Test plot
-plot(window(raw_ekg, start=0, end=5))
+# plot(window(raw_ekg, start=0, end=5))
 
 #faster subset, as window is too slow
 subset_index <- function(time_s) {
@@ -81,7 +105,7 @@ show_message <- function(msg) {
 }
 
 sort_ectopics <- function(vec_ectopics){
-	#Check if variable is denovo or old analysis (ie vector or data.frame)
+	#Check if variable is denovo or (partly) analysed (ie vector or data.frame)
 	if (class(vec_ectopics) == "numeric") {
 		df_ectopics <- data.frame(time = vec_ectopics, class = NA)
 	}
@@ -118,6 +142,10 @@ sort_ectopics <- function(vec_ectopics){
 		else if (ectopic_class == "n") {
 			df_ectopics$class[i] <- "normal"
 			show_message("normal")
+		}
+		else if (ectopic_class == "m") {
+			df_ectopics$class[i] <- "EMG"
+			show_message("EMG")
 		}
 		else if (ectopic_class == "Left") {
 			if (i > 1) i <- i - 1
