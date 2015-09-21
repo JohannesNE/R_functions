@@ -18,7 +18,15 @@ freq <- 125
 output_folder <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H types/"
 
 # === VISUAL SETTINGS ======
-plot_padding <- 3 #seconds on both sides of ectopic
+plot_padding <- 5 #seconds on both sides of ectopic
+
+### Keyboard Shortcuts ------------------
+shortcuts <- c("u" = "Unknown", 
+	       "s" = "SV",
+	       "v" = "V",
+	       "n" = "Normal",
+	       "a" = "Arythmia",
+	       "m" = "EGM")
 
 ### Functions ------------------
 
@@ -58,12 +66,12 @@ get_analysis_data <- function(index){
 
 }
 
-readkeygraph <- function(prompt)
+readkeygraph <- function(prompt, console = "ss")
 {
 	getGraphicsEvent(prompt = prompt, 
 		onMouseDown = NULL, onMouseMove = NULL,
 		onMouseUp = NULL, onKeybd = onKeybd,
-		consolePrompt = "[click on graph then follow top prompt to continue]")
+		consolePrompt = console)
 	Sys.sleep(0.01)
 	return(keyPressed)
 }
@@ -74,7 +82,7 @@ onKeybd <- function(key)
 }
 	
 #Test plot
-# plot(window(raw_ecg, start=0, end=5))
+#plot(window(aa$ECG, start=0, end=5))
 
 #faster subset, as window is too slow
 subset_index <- function(time_s) {
@@ -82,11 +90,17 @@ subset_index <- function(time_s) {
 }
 
 #Called by classify_ectopics
-check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", raw_ecg, raw_R) {
+check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", raw_ecg, raw_R, 
+			  console) {
 	#Plots ecg as vector and calculates fitting time axis, as window() is too slow
 	plot(y = raw_ecg[subset_index(t_ectopic)], 
 	     x = seq(t_ectopic - plot_padding, t_ectopic + plot_padding, by =1/freq),
-	     main = main_title, type = "l")
+	     main = main_title, 
+	     xlab = "Time [s]", ylab = "",
+	     type = "l")
+	
+	points(x = t_ectopic, y = par("usr")[3], col = "blue", pch = 24,
+	       cex = 2, bg = "blue")
 	
 	#Marks R with vertical lines
 	if (R_mark == "line") {
@@ -105,7 +119,7 @@ check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", raw_
 				 	cex = 1.5) # size
 	}
 	
-	readkeygraph("[press key to classify beat]")
+	readkeygraph("[press key to classify beat]", console)
 }
 #Shows legend on plot
 show_message <- function(msg) {
@@ -130,36 +144,25 @@ classify_ectopics <- function(analysis, typed = NA){
 	n_ectopics <- nrow(df_ectopics)
 	
 	windows() #getGraphicsEvent only works in win.plot
+	
+	ectopic_type <- NA #to avoid error in ifelse function used to write last input to console
 	while (TRUE) {
 		#Show beat and get key press
 		ectopic_type <- check_ectopic(df_ectopics$time[i], 
-					       main_title = sprintf("Type = %s  (%i / %i)", 
+					       main_title = sprintf("%s - Type = %s  (%i / %i)",
+					       		     analysis$file_short,
 					       		     df_ectopics$type[i],
 					       		     i,
 					       		     n_ectopics),
-					       R_mark = "point", #or line
+					       R_mark = "point", #or lines
 					      raw_ecg = analysis$ECG,
-					      raw_R = analysis$R) 
+					      raw_R = analysis$R,
+					      #Show last classification in console
+					      console = ifelse(ectopic_type %in% names(shortcuts),
+					      		 shortcuts[ectopic_type], "--")) 
 		#Check key press
-		if (ectopic_type == "v") {
-			df_ectopics$type[i] <- "V"
-			show_message("V")
-		}
-		else if (ectopic_type == "s") {
-			df_ectopics$type[i] <- "SV"
-			show_message("SV")
-		}
-		else if (ectopic_type == "u") {
-			df_ectopics$type[i] <- "unknown"
-			show_message("unknown")
-		}
-		else if (ectopic_type == "n") {
-			df_ectopics$type[i] <- "normal"
-			show_message("normal")
-		}
-		else if (ectopic_type == "m") {
-			df_ectopics$type[i] <- "EMG"
-			show_message("EMG")
+		if (ectopic_type %in% names(shortcuts)) {
+			df_ectopics$type[i] <- shortcuts[ectopic_type]
 		}
 		else if (ectopic_type == "Left") {
 			if (i > 1) i <- i - 1
