@@ -103,7 +103,7 @@ check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", raw_
 	points(x = t_ectopic, y = par("usr")[3], col = "blue", pch = 24,
 	       cex = 2, bg = "blue")
 	
-	mtext("Press [ctrl + Q] to save and exit", side = 1, adj = 0)
+	mtext("Press [ctrl + Q] to save and exit", side = 1, adj = 0, line = 4)
 	
 	#Marks R with vertical lines
 	if (R_mark == "line") {
