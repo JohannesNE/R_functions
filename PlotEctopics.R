@@ -1,3 +1,16 @@
+#Instruction =======================
+# Indlæs data med funtionen:
+# data <- get_analysis_data(1)
+# hvor 1 er index nr for den fil der skal indlæses
+# listen af filer er i variablen ecg_files
+#
+# Classificer med functionen:
+# results <- classify_ectopics(data)
+#
+# Gem med save_analysis(results)
+# Load med results <- load_analysis()
+
+#CODE =========================
 library(dplyr)
 library(xlsx)
 
