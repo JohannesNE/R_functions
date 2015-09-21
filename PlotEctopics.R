@@ -74,14 +74,10 @@ get_analysis_data <- function(index){
 	else if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) > 1) {
 		return(message("More than 1 match... probably due to file being open in excel"))
 	}
-	
-
 }
 	
 #Test plot
 #plot(window(aa$ECG, start=0, end=5))
-
-
 
 classify_ectopics <- function(analysis, typed = NA){
 	
