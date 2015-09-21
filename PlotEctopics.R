@@ -27,7 +27,7 @@ get_analysis_data <- function(index){
 	#Check that file has match in ectopics folder (tests that file name exists in ectopic folder)
 	if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 1) {
 		raw_data <- getData(paste(path_ecg_mat, ecg_files[index], sep = "")) #loads kubios .mat file
-		raw_ekg <- ts(raw_data$CNT$EKG, frequency = 125, start = 0)
+		raw_ecg <- ts(raw_data$CNT$EKG, frequency = 125, start = 0)
 		raw_R <- raw_data$HRV$Data$T.RR # R detections
 		rm(raw_data)
 		
@@ -40,11 +40,17 @@ get_analysis_data <- function(index){
 		ectopic_times <- read.xlsx(paste(path_ectopics, ectopic_file, sep = ""), 
 						 1, header = FALSE)[,1]
 		
-		list(ECG = raw_ekg, R = raw_R, ectopics = ectopic_times)	
+		#Convert ms to s
+		ectopic_times <- ectopic_times / 1000
+		
+		#Return list of raw data incl file name
+		list(ECG = raw_ecg, R = raw_R, ectopics = ectopic_times, 
+		     file = ectopic_file, file_short = substr(ectopic_file, 11, 16))	
 	}
 	else if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 0) {
 		return(message("No match in ectopic folder"))
 	}
+	#Excel generates a copy of any open file. This creates an error
 	else if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) > 1) {
 		return(message("More than 1 match... probably due to file being open in excel"))
 	}
@@ -68,16 +74,18 @@ onKeybd <- function(key)
 }
 	
 #Test plot
-# plot(window(raw_ekg, start=0, end=5))
+# plot(window(raw_ecg, start=0, end=5))
 
 #faster subset, as window is too slow
 subset_index <- function(time_s) {
 	(time_s*freq-plot_padding*freq):(time_s*freq+plot_padding*freq)
 }
 
-check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point") {
+#Called by classify_ectopics
+check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", raw_ecg, raw_R) {
 	#Plots ecg as vector and calculates fitting time axis, as window() is too slow
-	plot(y = raw_ekg[subset_index(t_ectopic)], x = seq(t_ectopic - plot_padding, t_ectopic + plot_padding, by =1/freq),
+	plot(y = raw_ecg[subset_index(t_ectopic)], 
+	     x = seq(t_ectopic - plot_padding, t_ectopic + plot_padding, by =1/freq),
 	     main = main_title, type = "l")
 	
 	#Marks R with vertical lines
@@ -90,7 +98,7 @@ check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point") {
 	if (R_mark == "point") {
 		points(x = raw_R[raw_R > t_ectopic - plot_padding &
 				 	raw_R < t_ectopic + plot_padding] + 1 / freq,
-				 	y = raw_ekg[raw_R[raw_R > t_ectopic - plot_padding &
+				 	y = raw_ecg[raw_R[raw_R > t_ectopic - plot_padding &
 				 			  	raw_R < t_ectopic + plot_padding] * freq + 1], # +1 to make marks fit
 				 	col = "red",
 				 	pch = 4, #Type X (3 = cross)
@@ -104,58 +112,64 @@ show_message <- function(msg) {
 	legend("center", legend = msg)
 }
 
-sort_ectopics <- function(vec_ectopics){
-	#Check if variable is denovo or (partly) analysed (ie vector or data.frame)
-	if (class(vec_ectopics) == "numeric") {
-		df_ectopics <- data.frame(time = vec_ectopics, class = NA)
+classify_ectopics <- function(analysis, typed = NA){
+	#Check if variable is denovo or (partly) analysed (typed contains analysed dataframe)
+	if (class(analysis) == "list") {
+		if (all(is.na(typed))) {
+			df_ectopics <- data.frame(time = analysis$ectopics, type = NA)
+		}
+		else if (class(typed) == "data.frame") {
+			df_ectopics <- typed
+		}
+		else stop("Wrong typed format")
 	}
-	if (class(vec_ectopics) == "data.frame") {
-		df_ectopics <- vec_ectopics
-	}
+	else stop("Wrong analysis format")
 	
-	i <- ifelse(any(is.na(df_ectopics$class)) ,min(which(is.na(df_ectopics$class))), 1) #set index to first NA in data.frame
+	i <- ifelse(any(is.na(df_ectopics$type)) ,min(which(is.na(df_ectopics$type))), 1) #set index to first NA in data.frame
 	
 	n_ectopics <- nrow(df_ectopics)
 	
 	windows() #getGraphicsEvent only works in win.plot
 	while (TRUE) {
 		#Show beat and get key press
-		ectopic_class <- check_ectopic(df_ectopics$time[i], 
-					       main_title = sprintf("Class = %s  (%i / %i)", 
-					       		     df_ectopics$class[i],
+		ectopic_type <- check_ectopic(df_ectopics$time[i], 
+					       main_title = sprintf("Type = %s  (%i / %i)", 
+					       		     df_ectopics$type[i],
 					       		     i,
 					       		     n_ectopics),
-					       R_mark = "point") #or line
+					       R_mark = "point", #or line
+					      raw_ecg = analysis$ECG,
+					      raw_R = analysis$R) 
 		#Check key press
-		if (ectopic_class == "v") {
-			df_ectopics$class[i] <- "V"
+		if (ectopic_type == "v") {
+			df_ectopics$type[i] <- "V"
 			show_message("V")
 		}
-		else if (ectopic_class == "s") {
-			df_ectopics$class[i] <- "SV"
+		else if (ectopic_type == "s") {
+			df_ectopics$type[i] <- "SV"
 			show_message("SV")
 		}
-		else if (ectopic_class == "u") {
-			df_ectopics$class[i] <- "unknown"
+		else if (ectopic_type == "u") {
+			df_ectopics$type[i] <- "unknown"
 			show_message("unknown")
 		}
-		else if (ectopic_class == "n") {
-			df_ectopics$class[i] <- "normal"
+		else if (ectopic_type == "n") {
+			df_ectopics$type[i] <- "normal"
 			show_message("normal")
 		}
-		else if (ectopic_class == "m") {
-			df_ectopics$class[i] <- "EMG"
+		else if (ectopic_type == "m") {
+			df_ectopics$type[i] <- "EMG"
 			show_message("EMG")
 		}
-		else if (ectopic_class == "Left") {
+		else if (ectopic_type == "Left") {
 			if (i > 1) i <- i - 1
 			next
 		}
-		else if (ectopic_class == "Right") {
+		else if (ectopic_type == "Right") {
 			if (i < n_ectopics) i <-  i + 1
 			next
 		}
-		else if (ectopic_class == "ctrl-Q") {
+		else if (ectopic_type == "ctrl-Q") {
 			break
 		}
 		else next
