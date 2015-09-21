@@ -198,6 +198,7 @@ save_analysis <- function(typed_ectopics, path = output_folder) {
 	message(sprintf("Saved: %s", file_path))
 }
 
+#Creates object exual to the saved one.
 load_analysis <- function(file_path = file.choose()) {
 	df <- read.csv(file_path, stringsAsFactors = FALSE)
 	file_name <- strsplit(basename(file_path), "\\.")[[1]][1]
