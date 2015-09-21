@@ -1,23 +1,21 @@
 library(dplyr)
 library(xlsx)
 
+# Set working directory to folder containing HRV_matlab.R
+
 source("HRV_matlab.R")
 
 #Folder Paths
 path_ecg_mat <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H rettet/"
 path_ectopics <- "C:/Users/jene/Documents/Research/Ekstrasystoler/DetectedEctopics/"
+output_folder <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H types/"
 
 #find files
 ecg_files <- grep(".mat", list.files(path_ecg_mat), value = TRUE)
 ectopics_files <- list.files(path_ectopics)
 
-ectopic_times_ex <- c(18*60+19, 29*60-0.5, 17*60+53, 60*60+36*60+33.5) #eksample for ecg_files[2]
-
+# === SETTINGS ======
 freq <- 125
-
-output_folder <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H types/"
-
-# === VISUAL SETTINGS ======
 plot_padding <- 5 #seconds on both sides of ectopic
 
 ### Keyboard Shortcuts ------------------
@@ -150,6 +148,7 @@ classify_ectopics <- function(analysis, typed = NA){
 	
 	ectopic_type <- NA #to avoid error in ifelse function used to write last input to console
 	while (TRUE) {
+		backup_res <<- list(file = analysis$file, df = df_ectopics)
 		#Show beat and get key press
 		ectopic_type <- check_ectopic(df_ectopics$time[i], 
 					       main_title = sprintf("%s - Type = %s  (%i / %i)",
