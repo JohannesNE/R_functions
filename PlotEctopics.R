@@ -66,70 +66,67 @@ get_analysis_data <- function(index){
 	
 
 }
-
-readkeygraph <- function(prompt, console = "ss")
-{
-	getGraphicsEvent(prompt = prompt, 
-		onMouseDown = NULL, onMouseMove = NULL,
-		onMouseUp = NULL, onKeybd = onKeybd,
-		consolePrompt = console)
-	Sys.sleep(0.01)
-	return(keyPressed)
-}
-
-onKeybd <- function(key)
-{
-	keyPressed <<- key
-}
 	
 #Test plot
 #plot(window(aa$ECG, start=0, end=5))
 
-#faster subset, as window is too slow
-subset_index <- function(time_s) {
-	(time_s*freq-plot_padding*freq):(time_s*freq+plot_padding*freq)
-}
 
-#Called by classify_ectopics
-check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", raw_ecg, raw_R, 
-			  console) {
-	#Plots ecg as vector and calculates fitting time axis, as window() is too slow
-	plot(y = raw_ecg[subset_index(t_ectopic)], 
-	     x = seq(t_ectopic - plot_padding, t_ectopic + plot_padding, by =1/freq),
-	     main = main_title, 
-	     xlab = "Time [s]", ylab = "",
-	     type = "l")
-	
-	points(x = t_ectopic, y = par("usr")[3], col = "blue", pch = 24,
-	       cex = 2, bg = "blue")
-	
-	mtext("Press [ctrl + Q] to save and exit", side = 1, adj = 0, line = 4)
-	
-	#Marks R with vertical lines
-	if (R_mark == "line") {
-		abline(v = raw_R[raw_R > t_ectopic - plot_padding &
-				 	raw_R < t_ectopic + plot_padding] + 1 / freq, #+1/freq to make marks fit
-				 	col = "red") #Mark R detections
-	}
-	#Mark R with crosses
-	if (R_mark == "point") {
-		points(x = raw_R[raw_R > t_ectopic - plot_padding &
-				 	raw_R < t_ectopic + plot_padding] + 1 / freq,
-				 	y = raw_ecg[raw_R[raw_R > t_ectopic - plot_padding &
-				 			  	raw_R < t_ectopic + plot_padding] * freq + 1], # +1 to make marks fit
-				 	col = "red",
-				 	pch = 4, #Type X (3 = cross)
-				 	cex = 1.5) # size
-	}
-	
-	readkeygraph("[press key to classify beat]", console)
-}
-#Shows legend on plot
-show_message <- function(msg) {
-	legend("center", legend = msg)
-}
 
 classify_ectopics <- function(analysis, typed = NA){
+	
+	#Closure functions -----------------
+	check_ectopic <- function(t_ectopic, main_title = "none", R_mark = "point", 
+				  console) {
+		#faster subset of raw ECG, as window is too slow
+		subset_index <- function(time_s) {
+			(time_s*freq-plot_padding*freq):(time_s*freq+plot_padding*freq)
+		}
+		readkeygraph <- function(prompt)
+		{
+			onKeybd <- function(key)
+			{
+				keyPressed <<- key
+			}
+			getGraphicsEvent(prompt = prompt, 
+					 onMouseDown = NULL, onMouseMove = NULL,
+					 onMouseUp = NULL, onKeybd = onKeybd,
+					 consolePrompt = console)
+			Sys.sleep(0.01)
+			return(keyPressed)
+		}
+		#Plots ecg as vector and calculates fitting time axis, as window() is too slow
+		plot(y = analysis$ECG[subset_index(t_ectopic)], 
+		     x = seq(t_ectopic - plot_padding, t_ectopic + plot_padding, by =1/freq),
+		     main = main_title, 
+		     xlab = "Time [s]", ylab = "",
+		     type = "l")
+		
+		points(x = t_ectopic, y = par("usr")[3], col = "blue", pch = 24,
+		       cex = 2, bg = "blue")
+		
+		mtext("Press [ctrl + Q] to save and exit", side = 1, adj = 0, line = 4)
+		
+		#Marks R with vertical lines
+		if (R_mark == "line") {
+			abline(v = analysis$R[analysis$R > t_ectopic - plot_padding &
+					 	analysis$R < t_ectopic + plot_padding] + 1 / freq, #+1/freq to make marks fit
+					 	col = "red") #Mark R detections
+		}
+		#Mark R with crosses
+		if (R_mark == "point") {
+			points(x = analysis$R[analysis$R > t_ectopic - plot_padding &
+					 	analysis$R < t_ectopic + plot_padding] + 1 / freq,
+					 	y = analysis$ECG[analysis$R[analysis$R > t_ectopic - plot_padding &
+					 			  	analysis$R < t_ectopic + plot_padding] * freq + 1], # +1 to make marks fit
+					 	col = "red",
+					 	pch = 4, #Type X (3 = cross)
+					 	cex = 1.5) # size
+		}
+		
+		readkeygraph("[press key to classify beat]")
+	}
+	#-------------------------------------------
+	
 	#Check if variable is denovo or (partly) analysed (typed contains analysed dataframe)
 	if (class(analysis) == "list") {
 		if (all(is.na(typed))) {
@@ -161,8 +158,6 @@ classify_ectopics <- function(analysis, typed = NA){
 					       		     i,
 					       		     n_ectopics),
 					       R_mark = "point", #or lines
-					      raw_ecg = analysis$ECG,
-					      raw_R = analysis$R,
 					      #Show last classification in console
 					      console = ifelse(ectopic_type %in% names(shortcuts),
 					      		 shortcuts[ectopic_type], "--")) 
