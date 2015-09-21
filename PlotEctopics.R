@@ -26,7 +26,7 @@ shortcuts <- c("u" = "Unknown",
 	       "v" = "V",
 	       "n" = "Normal",
 	       "a" = "Arythmia",
-	       "m" = "EGM")
+	       "m" = "EMG")
 
 ### Functions ------------------
 
