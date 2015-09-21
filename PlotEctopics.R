@@ -53,7 +53,8 @@ get_analysis_data <- function(index){
 		
 		#Return list of raw data incl file name
 		list(ECG = raw_ecg, R = raw_R, ectopics = ectopic_times, 
-		     file = ectopic_file, file_short = substr(ectopic_file, 11, 16))	
+		     file = strsplit(ecg_files[index], "\\.")[[1]][1], 
+		     file_short = substr(ectopic_file, 11, 16))	
 	}
 	else if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 0) {
 		return(message("No match in ectopic folder"))
@@ -132,8 +133,11 @@ classify_ectopics <- function(analysis, typed = NA){
 		if (all(is.na(typed))) {
 			df_ectopics <- data.frame(time = analysis$ectopics, type = NA)
 		}
-		else if (class(typed) == "data.frame") {
-			df_ectopics <- typed
+		else if (names(typed)[2] == "df") {
+			if (typed$file != analysis$file){ #Checks that analysis and type are from same file
+				message("OBS: Analysis and typed files does not match!")
+			}
+			df_ectopics <- typed$df
 		}
 		else stop("Wrong typed format")
 	}
@@ -143,7 +147,7 @@ classify_ectopics <- function(analysis, typed = NA){
 	
 	n_ectopics <- nrow(df_ectopics)
 	
-	windows() #getGraphicsEvent only works in win.plot
+	windows(1600, 600) #getGraphicsEvent only works in win.plot
 	
 	ectopic_type <- NA #to avoid error in ifelse function used to write last input to console
 	while (TRUE) {
@@ -180,6 +184,16 @@ classify_ectopics <- function(analysis, typed = NA){
 		if (i < n_ectopics) i <- i+1
 	}
 	dev.off()
-	df_ectopics
+	list(file = analysis$file, df = df_ectopics)
 	
+}
+
+save_analysis <- function(typed_ectopics, path = output_folder) {
+	file_path <- paste0(path, typed_ectopics$file, ".csv")
+	if (file.exists(file_path)){
+		YN <- readline("File already exists. Overwrite? [Y/N]")
+		if (toupper(YN) != "Y") stop("File not saved")
+	}
+	write.csv(typed_ectopics$df, file_path, row.names = FALSE) #add file
+	message(sprintf("Saved: %s", file_path))
 }
