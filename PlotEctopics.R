@@ -42,6 +42,7 @@ shortcuts <- c("u" = "Unknown",
 ### Functions ------------------
 
 #Load ecg as time series Chose file by index
+load_analysis_data <- function(index){
 	#Check that file has match in ectopics folder (tests that file name exists in ectopic folder)
 	if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 1) {
 		raw_data <- getData(paste(path_ecg_mat, ecg_files[index], sep = "")) #loads kubios .mat file
