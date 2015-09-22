@@ -42,7 +42,6 @@ shortcuts <- c("u" = "Unknown",
 ### Functions ------------------
 
 #Load ecg as time series Chose file by index
-get_analysis_data <- function(index){
 	#Check that file has match in ectopics folder (tests that file name exists in ectopic folder)
 	if(sum(grepl(strsplit(ecg_files[index], "\\.")[[1]][1], ectopics_files)) == 1) {
 		raw_data <- getData(paste(path_ecg_mat, ecg_files[index], sep = "")) #loads kubios .mat file
@@ -191,6 +190,16 @@ classify_ectopics <- function(analysis, typed = NA){
 	dev.off()
 	list(file = analysis$file, df = df_ectopics)
 	
+}
+
+review_specific <- function(analysis, typed_ectopics, target_type = "Unknown") {
+	type_na <- is.na(typed_ectopics$df$type)
+	new_subset <- list(file = typed_ectopics$file,
+			   df = typed_ectopics$df[!type_na & typed_ectopics$df$type == target_type,])
+	new_result <- classify_ectopics(analysis, new_subset)
+	typed_ectopics$df$type[!type_na & typed_ectopics$df$type == target_type] <- new_result$df$type
+	list(file = typed_ectopics$file,
+	     df = typed_ectopics$df)
 }
 
 save_analysis <- function(typed_ectopics, path = output_folder) {
