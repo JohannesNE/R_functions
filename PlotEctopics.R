@@ -32,7 +32,8 @@ freq <- 125
 plot_padding <- 5 #seconds on both sides of ectopic
 
 ### Keyboard Shortcuts ------------------
-shortcuts <- c("u" = "Unknown", 
+shortcuts <- c("u" = "Unsure",
+	       "e" = "Unknown ectopic",
 	       "s" = "SV",
 	       "v" = "V",
 	       "n" = "Normal",
