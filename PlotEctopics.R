@@ -194,12 +194,13 @@ classify_ectopics <- function(analysis, typed = NA){
 	
 }
 
-review_specific <- function(analysis, typed_ectopics, target_type = "Unknown") {
+#target_type is used to grep specific types
+review_specific <- function(analysis, typed_ectopics, target_type = "Unknown|Unsure") {
 	type_na <- is.na(typed_ectopics$df$type)
 	new_subset <- list(file = typed_ectopics$file,
-			   df = typed_ectopics$df[!type_na & typed_ectopics$df$type == target_type,])
+			   df = typed_ectopics$df[!type_na & grepl(target_type, typed_ectopics$df$type),])
 	new_result <- classify_ectopics(analysis, new_subset)
-	typed_ectopics$df$type[!type_na & typed_ectopics$df$type == target_type] <- new_result$df$type
+	typed_ectopics$df$type[!type_na & grepl(target_type, typed_ectopics$df$type)] <- new_result$df$type
 	list(file = typed_ectopics$file,
 	     df = typed_ectopics$df)
 }
