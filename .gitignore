@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 *.Rproj
-
 HRVtools.R
+*.zip
+
