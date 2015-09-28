@@ -185,6 +185,11 @@ classify_ectopics <- function(analysis, typed = NA){
 		else if (ectopic_type == "ctrl-Q") {
 			break
 		}
+		else if (ectopic_type %in% 1:9) {
+			if (ectopic_type == 1) i <- 1
+			else i <- round((as.numeric(ectopic_type) / 10) * n_ectopics)
+			next
+		}
 		else next
 		
 		if (i < n_ectopics) i <- i+1
