@@ -109,6 +109,10 @@ classify_ectopics <- function(analysis, typed = NA){
 		     xlab = "Time [s]", ylab = "",
 		     type = "l")
 		
+		#Add grid
+		abline(v = seq(ceiling(t_ectopic - plot_padding), 
+			       floor(t_ectopic + plot_padding), by=0.2), lty=3, col = "grey")
+		
 		points(x = t_ectopic, y = par("usr")[3], col = "blue", pch = 24,
 		       cex = 2, bg = "blue")
 		
