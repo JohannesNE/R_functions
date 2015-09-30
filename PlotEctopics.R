@@ -243,3 +243,9 @@ load_analysis <- function(file_path = file.choose()) {
 	file_name <- strsplit(basename(file_path), "\\.")[[1]][1]
 	list(file = file_name, df = df)
 }
+
+#Misc fuctions =====
+quick_load <- function(nr) {
+	assign(paste0("raw_", nr), load_analysis_data(nr), envir = .GlobalEnv)
+	assign(paste0("ana_", nr), classify_ectopics(get(paste0("raw_", nr))), envir = .GlobalEnv)
+}
