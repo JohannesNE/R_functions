@@ -87,7 +87,7 @@ classify_ectopics <- function(analysis, typed = NA){
 				  console) {
 		#faster subset of raw ECG, as window is too slow
 		subset_index <- function(time_s) {
-			(time_s*freq-plot_padding*freq):(time_s*freq+plot_padding*freq)
+			((time_s-plot_padding)*freq+1):((time_s+plot_padding)*freq+1) # +1 index correction
 		}
 		readkeygraph <- function(prompt)
 		{
