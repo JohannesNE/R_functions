@@ -104,7 +104,7 @@ classify_ectopics <- function(analysis, typed = NA){
 		}
 		#Plots ecg as vector and calculates fitting time axis, as window() is too slow
 		plot(y = analysis$ECG[subset_index(t_ectopic)], 
-		     x = seq_along(analysis$ECG[subset_index(t_ectopic)])/freq + (t_ectopic-plot_padding),
+		     x = (seq_along(analysis$ECG[subset_index(t_ectopic)])-1)/freq + (t_ectopic-plot_padding), #-1 as index starts at 1
 		     main = main_title, 
 		     xlab = "Time [s]", ylab = "",
 		     type = "l")
