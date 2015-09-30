@@ -122,12 +122,6 @@ classify_ectopics <- function(analysis, typed = NA){
 		points(x = ectopic_limit, y = par("usr")[4], col = "red", pch = 25,
 		       cex = 2, bg = "red")
 		
-		#temp
-		points(x = R_pre, y = par("usr")[3], col = "red", pch = 24,
-		       cex = 2, bg = "blue")
-		points(x = R_pre - RR_pre, y = par("usr")[3], col = "red", pch = 24,
-		       cex = 2, bg = "yellow")
-		
 		#Add grid
 		abline(v = seq(ceiling(t_ectopic - plot_padding), 
 			       floor(t_ectopic + plot_padding), by=0.2), lty=3, col = "grey")
