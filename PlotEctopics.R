@@ -140,9 +140,9 @@ classify_ectopics <- function(analysis, typed = NA){
 		#Mark R with crosses
 		if (R_mark == "point") {
 			points(x = analysis$R[analysis$R > t_ectopic - plot_padding &
-					 	analysis$R < t_ectopic + plot_padding] + 1 / freq,
+					 	analysis$R < t_ectopic + plot_padding],
 					 	y = analysis$ECG[analysis$R[analysis$R > t_ectopic - plot_padding &
-					 			  	analysis$R < t_ectopic + plot_padding] * freq + 1], # +1 to make marks fit
+					 			  	analysis$R < t_ectopic + plot_padding] * freq + 1], # +1 as index starts from 1
 					 	col = "red",
 					 	pch = 4, #Type X (3 = cross)
 					 	cex = 1.5) # size
