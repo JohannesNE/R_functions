@@ -109,6 +109,25 @@ classify_ectopics <- function(analysis, typed = NA){
 		     xlab = "Time [s]", ylab = "",
 		     type = "l")
 		
+		#Add ectopic limit (The peak has to be before this to count)
+		R_post_i <- which(abs(t_ectopic - analysis$R) < 0.1) #Close match
+		R_pre <- analysis$R[R_post_i - 2]
+		RR_pre <- R_pre - analysis$R[R_post_i - 3]
+		ectopic_limit <- R_pre + 0.8 * RR_pre #20 % earlier than expected
+		#Red Line
+		abline(v= ectopic_limit, lty = 2, col = "red")
+		#Red markers in top and bottom
+		points(x = ectopic_limit, y = par("usr")[3], col = "red", pch = 24,
+		       cex = 2, bg = "red")
+		points(x = ectopic_limit, y = par("usr")[4], col = "red", pch = 25,
+		       cex = 2, bg = "red")
+		
+		#temp
+		points(x = R_pre, y = par("usr")[3], col = "red", pch = 24,
+		       cex = 2, bg = "blue")
+		points(x = R_pre - RR_pre, y = par("usr")[3], col = "red", pch = 24,
+		       cex = 2, bg = "yellow")
+		
 		#Add grid
 		abline(v = seq(ceiling(t_ectopic - plot_padding), 
 			       floor(t_ectopic + plot_padding), by=0.2), lty=3, col = "grey")
