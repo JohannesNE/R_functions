@@ -235,7 +235,7 @@ save_analysis <- function(typed_ectopics, path = output_folder) {
 	}
 	write.csv(typed_ectopics$df, file_path, row.names = FALSE) #add file
 	message(sprintf("Saved: %s", file_path))
-	if (any(is.na(typed_ectopics))) warning("Analysis contains NAs")
+	if (any(is.na(typed_ectopics$df))) warning("Analysis contains NAs")
 }
 
 #Creates object exual to the saved one.
