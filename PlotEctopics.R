@@ -250,3 +250,11 @@ quick_load <- function(nr) {
 	assign(paste0("raw_", nr), load_analysis_data(nr), envir = .GlobalEnv)
 	assign(paste0("ana_", nr), classify_ectopics(get(paste0("raw_", nr))), envir = .GlobalEnv)
 }
+
+quick_load_analysis <- function(nr) {
+	assign(paste0("raw_", nr), load_analysis_data(nr), envir = .GlobalEnv)
+	classified_file <- grep(get(paste0("raw_", nr))$file, list.files(output_folder),
+				value = TRUE)
+		
+	assign(paste0("ana_", nr), load_analysis(paste0(output_folder, classified_file)), envir = .GlobalEnv)
+}
