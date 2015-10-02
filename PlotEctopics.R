@@ -221,6 +221,8 @@ review_specific <- function(analysis, typed_ectopics, target_type = "Unknown|Uns
 	type_na <- is.na(typed_ectopics$df$type)
 	new_subset <- list(file = typed_ectopics$file,
 			   df = typed_ectopics$df[!type_na & grepl(target_type, typed_ectopics$df$type),])
+	if (nrow(new_subset$df) == 0) return(stop("No match"))
+	
 	new_result <- classify_ectopics(analysis, new_subset)
 	typed_ectopics$df$type[!type_na & grepl(target_type, typed_ectopics$df$type)] <- new_result$df$type
 	list(file = typed_ectopics$file,
@@ -251,6 +253,7 @@ quick_load <- function(nr) {
 	assign(paste0("ana_", nr), classify_ectopics(get(paste0("raw_", nr))), envir = .GlobalEnv)
 }
 
+#Load analysis and raw data based on raw data index
 quick_load_analysis <- function(nr) {
 	assign(paste0("raw_", nr), load_analysis_data(nr), envir = .GlobalEnv)
 	classified_file <- grep(get(paste0("raw_", nr))$file, list.files(output_folder),
