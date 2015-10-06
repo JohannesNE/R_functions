@@ -1,6 +1,6 @@
-require(R.matlab)
-require(dplyr)
-require(rhdf5)
+library(R.matlab)
+library(dplyr)
+library(rhdf5)
 
 
 #Removes dimensons by converting to a vector
@@ -10,7 +10,7 @@ asVec <- function(X){
 	t
 }
 
-#Extract Specific analyses Slightly better For-loop way
+#Extract Specific analyses working but horrible For-loop way
 getData <- function(path, keepMatrix = F){
 	toVec <- function(X){		#Funtion to switch between drop and asVec. Drop keeps matrix structure
 		if(keepMatrix) drop(X)
