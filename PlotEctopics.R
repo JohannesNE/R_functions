@@ -249,12 +249,14 @@ load_analysis <- function(file_path = file.choose()) {
 
 #Misc fuctions =====
 quick_load <- function(nr) {
+	#For de novo classification of raw detections
 	assign(paste0("raw_", nr), load_analysis_data(nr), envir = .GlobalEnv)
 	assign(paste0("ana_", nr), classify_ectopics(get(paste0("raw_", nr))), envir = .GlobalEnv)
 }
 
 #Load analysis and raw data based on raw data index
 quick_load_analysis <- function(nr) {
+	#For reloading saved classification
 	assign(paste0("raw_", nr), load_analysis_data(nr), envir = .GlobalEnv)
 	classified_file <- grep(get(paste0("raw_", nr))$file, list.files(output_folder),
 				value = TRUE)
@@ -264,6 +266,6 @@ quick_load_analysis <- function(nr) {
 
 quick_review <- function(nr) {
 	assign(paste0("ana_", nr), review_specific(get(paste0("raw_", nr)),
-						   get(paste0("ana_", nr)),
+						   get(paste0("ana_", nr))
 					   ), envir = .GlobalEnv)
 }
