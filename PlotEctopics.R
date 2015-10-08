@@ -265,7 +265,10 @@ quick_load_analysis <- function(nr) {
 }
 
 quick_review <- function(nr) {
+	quick_load_analysis(nr)
 	assign(paste0("ana_", nr), review_specific(get(paste0("raw_", nr)),
 						   get(paste0("ana_", nr))
 					   ), envir = .GlobalEnv)
+	save_analysis(get(paste0("ana_", nr)))
+	rm(list=paste0("raw_", nr), envir = .GlobalEnv)
 }
