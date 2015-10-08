@@ -261,3 +261,9 @@ quick_load_analysis <- function(nr) {
 		
 	assign(paste0("ana_", nr), load_analysis(paste0(output_folder, classified_file)), envir = .GlobalEnv)
 }
+
+quick_review <- function(nr) {
+	assign(paste0("ana_", nr), review_specific(get(paste0("raw_", nr)),
+						   get(paste0("ana_", nr)),
+					   ), envir = .GlobalEnv)
+}
