@@ -19,9 +19,9 @@ library(xlsx)
 source("HRV_matlab.R")
 
 #Folder Paths
-path_ecg_mat <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H rettet/"
-path_ectopics <- "C:/Users/jene/Documents/Research/Ekstrasystoler/DetectedEctopics/"
-output_folder <- "C:/Users/jene/Documents/Research/Ekstrasystoler/24H types/"
+path_ecg_mat <- "C:/Users/jene/Documents/Research/Ekstrasystoler/Septic patients rettet/"
+path_ectopics <- "C:/Users/jene/Documents/Research/Ekstrasystoler/DetectedEctopics_sepsis/"
+output_folder <- "C:/Users/jene/Documents/Research/Ekstrasystoler/Septic types/"
 
 #find files
 ecg_files <- grep(".mat", list.files(path_ecg_mat), value = TRUE)
